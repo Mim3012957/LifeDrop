@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LifeDrop — Blood Donation Network</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand" id="brandLink">
+      <span class="brand-mark"><i class="ti ti-droplet-filled"></i></span>
+      <span class="brand-name">LifeDrop</span>
+    </div>
+    <nav class="nav-links" id="navLinks">
+      <button class="nav-link" data-route="home"><i class="ti ti-home"></i>Home</button>
+      <button class="nav-link" data-route="search"><i class="ti ti-search"></i>Find donors</button>
+      <button class="nav-link" data-route="requests"><i class="ti ti-clipboard-list"></i>Requests</button>
+      <button class="nav-link" data-route="emergency"><i class="ti ti-alert-triangle"></i>Emergency</button>
+      <button class="nav-link" id="navDashboard" data-route="dashboard" style="display:none"><i class="ti ti-user-circle"></i>Dashboard</button>
+      <button class="nav-link" id="navAdmin" data-route="admin" style="display:none"><i class="ti ti-shield"></i>Admin</button>
+    </nav>
+    <div class="auth-actions" id="authActions">
+      <button class="btn secondary sm" id="loginBtn">Log in</button>
+      <button class="btn blood sm" id="registerBtn">Become a donor</button>
+    </div>
+  </div>
+</header>
+
+<main id="app" class="app-main"></main>
+
+<footer class="footer">
+  LifeDrop — a community blood donation network. Runs on a real server-side data store.
+</footer>
+
+<div id="toast" class="toast" style="display:none"></div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>

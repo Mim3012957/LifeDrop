@@ -1,0 +1,216 @@
+{
+  "users": [
+    {
+      "id": "u_a7831372b72b",
+      "name": "Rahim Uddin",
+      "email": "rahim.uddin@example.com",
+      "passwordHash": "d62309e021446c5d73920b4253f084c391c59c487c130651257e509e6c65985dacdedc65fd357c53c550cfb5bd7a4a2c16d2f96416f84c34189cd198773bae5b",
+      "passwordSalt": "77500439663d999df31d67e9922e4b99",
+      "role": "donor",
+      "bloodType": "O+",
+      "city": "Dhaka",
+      "phone": "01700000001",
+      "availableGeneral": false,
+      "availableEmergency": true,
+      "donations": [
+        {
+          "id": "d_0",
+          "date": "2026-05-12",
+          "location": "Dhaka Medical College Hospital"
+        }
+      ],
+      "createdAt": 1784629697018
+    },
+    {
+      "id": "u_ed6a2f661295",
+      "name": "Fatima Akter",
+      "email": "fatima.akter@example.com",
+      "passwordHash": "1f07cf935b79e057ca3ca93ca2ead41eec8eecda10da5745cc42b8cf2f6ffae1551c806b8bf53fbc696cfee536ba02d0a87155a25b60a0662e529322d14f7522",
+      "passwordSalt": "c448007fd4a58640032d2b31e9cc7b87",
+      "role": "donor",
+      "bloodType": "A-",
+      "city": "Dhaka",
+      "phone": "01700000002",
+      "availableGeneral": true,
+      "availableEmergency": false,
+      "donations": [],
+      "createdAt": 1784543297018
+    },
+    {
+      "id": "u_11e6957fdfcd",
+      "name": "Karim Hossain",
+      "email": "karim.hossain@example.com",
+      "passwordHash": "cc94d0596986423560101a5d3204f6e5b615c9d4f628f8f05f416c37c2945a07101921bf605f78c3d7baa1add00d27f7c39b3251780a9b767862dabadc7eb9d2",
+      "passwordSalt": "fd80fe7738b054df09a366798e1af5a4",
+      "role": "donor",
+      "bloodType": "B+",
+      "city": "Chattogram",
+      "phone": "01700000003",
+      "availableGeneral": true,
+      "availableEmergency": false,
+      "donations": [],
+      "createdAt": 1784456897018
+    },
+    {
+      "id": "u_ef47aa730b42",
+      "name": "Nasrin Sultana",
+      "email": "nasrin.sultana@example.com",
+      "passwordHash": "b74f0166e6db1d293157b47722b469285ffb52e0bb2eab0fa067837e471da58d08228cfc19a135bcd570d9391bb7dd6c8a5e6c44a192bd2aeca8672fe95df317",
+      "passwordSalt": "a4da533b75dc936e49b25549aa7f270d",
+      "role": "donor",
+      "bloodType": "AB+",
+      "city": "Sylhet",
+      "phone": "01700000004",
+      "availableGeneral": true,
+      "availableEmergency": true,
+      "donations": [
+        {
+          "id": "d_3",
+          "date": "2026-05-12",
+          "location": "Dhaka Medical College Hospital"
+        }
+      ],
+      "createdAt": 1784370497018
+    },
+    {
+      "id": "u_240f8c7a96d2",
+      "name": "Jahangir Alam",
+      "email": "jahangir.alam@example.com",
+      "passwordHash": "8c95ae979a41fde08605c1fdb7172bbefdcb6c71c75e3764732cca8374a8c20205c3c272fc66482fa6cb9be42bccdcfdefc1aadde25dea46ef76efe9863afdfb",
+      "passwordSalt": "32a25dca801e438d04ca46926d7f86fa",
+      "role": "donor",
+      "bloodType": "O-",
+      "city": "Khulna",
+      "phone": "01700000005",
+      "availableGeneral": true,
+      "availableEmergency": false,
+      "donations": [],
+      "createdAt": 1784284097018
+    },
+    {
+      "id": "u_6f0b549e24be",
+      "name": "Sadia Islam",
+      "email": "sadia.islam@example.com",
+      "passwordHash": "ca1b62855f01e01ec74192b17656db63316bda819ba092f9a73db7072c855aaab8407f4961f62b080d9215faebf9b7b437f17b825335d92a55c20a14077112a9",
+      "passwordSalt": "6f441e8ce467efac68fc1a9c81f565a3",
+      "role": "donor",
+      "bloodType": "A+",
+      "city": "Dhaka",
+      "phone": "01700000006",
+      "availableGeneral": false,
+      "availableEmergency": false,
+      "donations": [],
+      "createdAt": 1784197697018
+    },
+    {
+      "id": "u_0d587ff1b6a5",
+      "name": "Tanvir Ahmed",
+      "email": "tanvir.ahmed@example.com",
+      "passwordHash": "8eb7146bc02e471a4d97e38c2d68c1e49592e39f098244cd41eb33304c603275b39e06c0304db4cab2f334073c3bb4f3cf92fa65e2412f1ee7aa546d71763410",
+      "passwordSalt": "42a388a289ebb292f078782c36c48dc7",
+      "role": "donor",
+      "bloodType": "B-",
+      "city": "Rajshahi",
+      "phone": "01700000007",
+      "availableGeneral": true,
+      "availableEmergency": true,
+      "donations": [
+        {
+          "id": "d_6",
+          "date": "2026-05-12",
+          "location": "Dhaka Medical College Hospital"
+        }
+      ],
+      "createdAt": 1784111297018
+    },
+    {
+      "id": "u_933aa0a11bee",
+      "name": "Mim Chowdhury",
+      "email": "mim.chowdhury@example.com",
+      "passwordHash": "d3c67c9394d22670e786403e9f28dcb5045e0ae6f335c8e59ff599db5ddb7a1216dad02f9fa478a49ed8f3cd9fcf6fab58b072f1fb9a7c8418e91949c219e3a3",
+      "passwordSalt": "a311fdd8e7f5c95827dc4b0f9634a769",
+      "role": "donor",
+      "bloodType": "O+",
+      "city": "Dhaka",
+      "phone": "01700000008",
+      "availableGeneral": true,
+      "availableEmergency": false,
+      "donations": [],
+      "createdAt": 1784024897018
+    },
+    {
+      "id": "u_admin",
+      "name": "Admin",
+      "email": "admin@lifedrop.org",
+      "passwordHash": "19374f2f977388da1bf6569ca842083e90ed896834700551e33187ef520d7c5b48011e84643cbfacbf295e3356c274cb2a6cdb09e2084f1a2daee7eef00bb294",
+      "passwordSalt": "55332e67d460e2eef46761a65e45e8d0",
+      "role": "admin",
+      "createdAt": 1784629697018
+    },
+    {
+      "id": "u_068ca0e95993",
+      "name": "Taslima Jahan Mim ",
+      "email": "tmv301295@gmail.com",
+      "phone": "01821433662",
+      "bloodType": "O+",
+      "city": "Dhaka",
+      "passwordHash": "d860099c9e18c37c5e400698c6304711425c11f82169d12684727ca126b2b17fb1635326918a3f41e6543bb58a75ae3e97f285fad2e640472cbccbbf65aaaa4d",
+      "passwordSalt": "1c8765b1534f52e030eaf5e655cd85b5",
+      "role": "donor",
+      "availableGeneral": true,
+      "availableEmergency": false,
+      "donations": [],
+      "createdAt": 1784630650052
+    }
+  ],
+  "requests": [
+    {
+      "id": "r_b0c8119507",
+      "patientName": "Rahim mia",
+      "bloodType": "AB-",
+      "city": "Dhaka",
+      "hospital": "islamic hospital",
+      "unitsNeeded": 1,
+      "urgency": "emergency",
+      "contactPhone": "01821433662",
+      "notes": "",
+      "postedBy": "u_068ca0e95993",
+      "status": "fulfilled",
+      "createdAt": 1784630750065,
+      "offers": []
+    },
+    {
+      "id": "r_7632184b9f",
+      "patientName": "Abdul Karim",
+      "bloodType": "O-",
+      "city": "Dhaka",
+      "hospital": "Dhaka Medical College Hospital",
+      "unitsNeeded": 2,
+      "urgency": "emergency",
+      "contactPhone": "01711000111",
+      "notes": "Emergency surgery — needed within hours.",
+      "postedBy": "u_ed6a2f661295",
+      "status": "open",
+      "createdAt": 1784622497018,
+      "offers": []
+    },
+    {
+      "id": "r_5fecc40e5a",
+      "patientName": "Ruma Begum",
+      "bloodType": "B+",
+      "city": "Chattogram",
+      "hospital": "Chattogram General Hospital",
+      "unitsNeeded": 1,
+      "urgency": "soon",
+      "contactPhone": "01822000222",
+      "notes": "Scheduled procedure in 3 days.",
+      "postedBy": "u_11e6957fdfcd",
+      "status": "open",
+      "createdAt": 1784521697018,
+      "offers": []
+    }
+  ],
+  "sessions": {
+    "d7576f65a2897676305352fdbc26ab023e325015b6cb9305": "u_068ca0e95993"
+  }
+}
