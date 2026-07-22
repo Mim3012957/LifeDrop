@@ -596,17 +596,21 @@ async function viewAdmin(root) {
       card.appendChild(table);
       bodyEl.appendChild(card);
     }
+  
     if (tab === 'requests') {
-      const data = await api('/api/requests');
+      const [data, donorData] = await Promise.all([api('/api/requests'), api('/api/donors')]);
+      const donorById = {};
+      donorData.donors.forEach(d => { donorById[d.id] = d; });
       const list = el('div', { class: 'stack' });
       data.requests.forEach(r => {
+        const poster = r.postedBy ? donorById[r.postedBy] : null;
         const actions = el('div', { class: 'row' });
         if (r.status === 'open') actions.appendChild(el('button', { class: 'btn secondary sm', onclick: async () => { await api('/api/requests/' + r.id + '/fulfill', { method: 'POST' }); loadTab(); } }, ['Mark fulfilled']));
         actions.appendChild(el('button', { class: 'btn secondary sm', onclick: async () => { await api('/api/requests/' + r.id, { method: 'DELETE' }); loadTab(); } }, [icon('trash')]));
         list.appendChild(el('div', { class: 'card row', style: 'justify-content:space-between' }, [
           el('div', {}, [
             el('div', { style: 'font-weight:700;font-size:14px' }, [r.patientName + ' ', el('span', { class: 'badge blood' }, [r.bloodType])]),
-            el('div', { class: 'muted', style: 'font-size:12.5px' }, [r.hospital + ' \u00b7 ' + r.city + ' \u00b7 ' + timeAgo(r.createdAt)]),
+            el('div', { class: 'muted', style: 'font-size:12.5px' }, [r.hospital + ' \u00b7 ' + r.city + ' \u00b7 ' + timeAgo(r.createdAt) + ' \u00b7 Posted by: ' + (poster ? poster.name + ' (' + poster.email + ')' : 'Anonymous/Guest')]),
           ]),
           actions,
         ]));

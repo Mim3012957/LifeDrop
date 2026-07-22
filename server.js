@@ -4,13 +4,41 @@
   Serves the frontend from /public and a JSON REST API under /api/*
   Data is stored server-side in data/db.json (a real persistent file, not browser storage)
 */
-
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const url = require('url');
-
+async function sendMatchEmail(to, request) {
+  if (!process.env.RESEND_API_KEY) {
+    console.log('RESEND_API_KEY not set — skipping email.');
+    return;
+  }
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + process.env.RESEND_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'LifeDrop <onboarding@resend.dev>',
+        to: [to],
+        subject: 'Blood needed: ' + request.bloodType + ' in ' + request.city,
+        html: '<p>A ' + request.urgency + ' blood request matches your type.</p>' +
+              '<p><b>Patient:</b> ' + request.patientName + '<br>' +
+              '<b>Blood type:</b> ' + request.bloodType + '<br>' +
+              '<b>Hospital:</b> ' + request.hospital + ', ' + request.city + '<br>' +
+              '<b>Contact:</b> ' + request.contactPhone + '</p>',
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) console.error('Resend error:', data);
+    else console.log('Email sent to', to);
+  } catch (err) {
+    console.error('Email send failed:', err.message);
+  }
+}
 const PORT = process.env.PORT || 3000;
 const DB_PATH = path.join(__dirname, 'data', 'db.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -98,6 +126,7 @@ function saveDB(db) {
 
 let db = loadDB();
 
+
 /* ---------------- Helpers ---------------- */
 
 function publicUser(u) {
@@ -169,7 +198,6 @@ function serveStatic(req, res, pathname) {
 
 async function handleApi(req, res, pathname, query) {
   const method = req.method;
-
   // POST /api/register
   if (pathname === '/api/register' && method === 'POST') {
     const body = await readBody(req);
@@ -297,6 +325,11 @@ async function handleApi(req, res, pathname, query) {
     };
     db.requests.unshift(request);
     saveDB(db);
+    const matchingDonors = db.users.filter(u =>
+      u.role === 'donor' && u.bloodType === request.bloodType &&
+      u.city === request.city && u.availableGeneral
+    );
+    matchingDonors.forEach(d => sendMatchEmail(d.email, request));
     return send(res, 201, { request });
   }
 
