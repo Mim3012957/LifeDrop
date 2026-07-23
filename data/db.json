@@ -19,7 +19,9 @@
           "location": "Dhaka Medical College Hospital"
         }
       ],
-      "createdAt": 1784629697018
+      "createdAt": 1784629697018,
+      "lastLogin": null,
+      "lastActive": null
     },
     {
       "id": "u_ed6a2f661295",
@@ -34,7 +36,9 @@
       "availableGeneral": true,
       "availableEmergency": false,
       "donations": [],
-      "createdAt": 1784543297018
+      "createdAt": 1784543297018,
+      "lastLogin": null,
+      "lastActive": null
     },
     {
       "id": "u_11e6957fdfcd",
@@ -49,7 +53,9 @@
       "availableGeneral": true,
       "availableEmergency": false,
       "donations": [],
-      "createdAt": 1784456897018
+      "createdAt": 1784456897018,
+      "lastLogin": null,
+      "lastActive": null
     },
     {
       "id": "u_ef47aa730b42",
@@ -70,7 +76,9 @@
           "location": "Dhaka Medical College Hospital"
         }
       ],
-      "createdAt": 1784370497018
+      "createdAt": 1784370497018,
+      "lastLogin": null,
+      "lastActive": null
     },
     {
       "id": "u_240f8c7a96d2",
@@ -85,7 +93,9 @@
       "availableGeneral": true,
       "availableEmergency": false,
       "donations": [],
-      "createdAt": 1784284097018
+      "createdAt": 1784284097018,
+      "lastLogin": null,
+      "lastActive": null
     },
     {
       "id": "u_6f0b549e24be",
@@ -100,7 +110,9 @@
       "availableGeneral": false,
       "availableEmergency": false,
       "donations": [],
-      "createdAt": 1784197697018
+      "createdAt": 1784197697018,
+      "lastLogin": null,
+      "lastActive": null
     },
     {
       "id": "u_0d587ff1b6a5",
@@ -121,7 +133,9 @@
           "location": "Dhaka Medical College Hospital"
         }
       ],
-      "createdAt": 1784111297018
+      "createdAt": 1784111297018,
+      "lastLogin": null,
+      "lastActive": null
     },
     {
       "id": "u_933aa0a11bee",
@@ -136,7 +150,9 @@
       "availableGeneral": true,
       "availableEmergency": false,
       "donations": [],
-      "createdAt": 1784024897018
+      "createdAt": 1784024897018,
+      "lastLogin": null,
+      "lastActive": null
     },
     {
       "id": "u_admin",
@@ -146,7 +162,8 @@
       "passwordSalt": "55332e67d460e2eef46761a65e45e8d0",
       "role": "admin",
       "createdAt": 1784629697018,
-      "lastLogin": 1784801246341
+      "lastLogin": 1784802842525,
+      "lastActive": 1784802842525
     },
     {
       "id": "u_068ca0e95993",
@@ -161,7 +178,9 @@
       "availableGeneral": true,
       "availableEmergency": false,
       "donations": [],
-      "createdAt": 1784630650052
+      "createdAt": 1784630650052,
+      "lastLogin": null,
+      "lastActive": null
     }
   ],
   "requests": [
@@ -219,6 +238,16 @@
     }
   ],
   "sessions": {
-    "0d400cfbaa830df06d99494b5c661baa096e4d9b4959f419": "u_admin"
-  }
+    "cc2b85fe7fa6ca7e498a975b62327273dc5744bbeee9e76b": "u_admin"
+  },
+  "activities": [
+    {
+      "id": "a_5916c7a78c",
+      "type": "login",
+      "message": "Admin logged in.",
+      "userId": "u_admin",
+      "at": 1784802842528
+    }
+  ],
+  "searches": []
 }

@@ -1,14 +1,132 @@
 /*
   LifeDrop backend — plain Node.js (no external packages required)
-  Run with: node server.js
+  Run with: node --env-file=.env server.js
   Serves the frontend from /public and a JSON REST API under /api/*
   Data is stored server-side in data/db.json (a real persistent file, not browser storage)
 */
+
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const url = require('url');
+
+const PORT = process.env.PORT || 3000;
+const DB_PATH = path.join(__dirname, 'data', 'db.json');
+const PUBLIC_DIR = path.join(__dirname, 'public');
+
+/* ---------------- Database (JSON file) ---------------- */
+
+function seedDB() {
+  const now = Date.now();
+  const mkUser = (name, email, bloodType, city, phone, i) => {
+    const { hash, salt } = hashPassword('demo1234');
+    return {
+      id: 'u_' + crypto.randomBytes(6).toString('hex'),
+      name, email, passwordHash: hash, passwordSalt: salt,
+      role: 'donor', bloodType, city, phone,
+      availableGeneral: i % 5 !== 0,
+      availableEmergency: i % 3 === 0,
+      donations: i % 3 === 0 ? [{ id: 'd_' + i, date: '2026-05-12', location: 'Dhaka Medical College Hospital' }] : [],
+      createdAt: now - i * 86400000,
+      lastLogin: null,
+      lastActive: null,
+    };
+  };
+
+  const donorSeed = [
+    ['Rahim Uddin', 'rahim.uddin@example.com', 'O+', 'Dhaka', '01700000001'],
+    ['Fatima Akter', 'fatima.akter@example.com', 'A-', 'Dhaka', '01700000002'],
+    ['Karim Hossain', 'karim.hossain@example.com', 'B+', 'Chattogram', '01700000003'],
+    ['Nasrin Sultana', 'nasrin.sultana@example.com', 'AB+', 'Sylhet', '01700000004'],
+    ['Jahangir Alam', 'jahangir.alam@example.com', 'O-', 'Khulna', '01700000005'],
+    ['Sadia Islam', 'sadia.islam@example.com', 'A+', 'Dhaka', '01700000006'],
+    ['Tanvir Ahmed', 'tanvir.ahmed@example.com', 'B-', 'Rajshahi', '01700000007'],
+    ['Mim Chowdhury', 'mim.chowdhury@example.com', 'O+', 'Dhaka', '01700000008'],
+  ];
+  const donors = donorSeed.map((d, i) => mkUser(d[0], d[1], d[2], d[3], d[4], i));
+
+  const adminPw = hashPassword('admin123');
+  const admin = {
+    id: 'u_admin', name: 'Admin', email: 'admin@lifedrop.org',
+    passwordHash: adminPw.hash, passwordSalt: adminPw.salt,
+    role: 'admin', createdAt: now, lastLogin: null, lastActive: null,
+  };
+
+  const requests = [
+    {
+      id: 'r_' + crypto.randomBytes(5).toString('hex'), patientName: 'Abdul Karim', bloodType: 'O-', city: 'Dhaka',
+      hospital: 'Dhaka Medical College Hospital', unitsNeeded: 2, urgency: 'emergency',
+      contactPhone: '01711000111', notes: 'Emergency surgery — needed within hours.',
+      postedBy: donors[1].id, status: 'open', createdAt: now - 3600000 * 2,
+      offers: [],
+    },
+    {
+      id: 'r_' + crypto.randomBytes(5).toString('hex'), patientName: 'Ruma Begum', bloodType: 'B+', city: 'Chattogram',
+      hospital: 'Chattogram General Hospital', unitsNeeded: 1, urgency: 'soon',
+      contactPhone: '01822000222', notes: 'Scheduled procedure in 3 days.',
+      postedBy: donors[2].id, status: 'open', createdAt: now - 3600000 * 30,
+      offers: [],
+    },
+  ];
+
+  return { users: [...donors, admin], requests, sessions: {}, activities: [], searches: [] };
+}
+
+function hashPassword(password, existingSalt) {
+  const salt = existingSalt || crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return { hash, salt };
+}
+
+function verifyPassword(password, salt, hash) {
+  const check = crypto.scryptSync(password, salt, 64).toString('hex');
+  return crypto.timingSafeEqual(Buffer.from(check), Buffer.from(hash));
+}
+
+function loadDB() {
+  if (!fs.existsSync(DB_PATH)) {
+    const fresh = seedDB();
+    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+    fs.writeFileSync(DB_PATH, JSON.stringify(fresh, null, 2));
+    return fresh;
+  }
+  const loaded = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+  // Backfill fields for DBs created before these features existed
+  loaded.activities = loaded.activities || [];
+  loaded.searches = loaded.searches || [];
+  loaded.users.forEach(u => {
+    if (u.lastLogin === undefined) u.lastLogin = null;
+    if (u.lastActive === undefined) u.lastActive = null;
+  });
+  return loaded;
+}
+
+function saveDB(db) {
+  fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+}
+
+let db = loadDB();
+
+/* ---------------- Activity log & search tracking ---------------- */
+
+function logActivity(type, message, userId) {
+  db.activities = db.activities || [];
+  db.activities.unshift({
+    id: 'a_' + crypto.randomBytes(5).toString('hex'),
+    type, message, userId: userId || null, at: Date.now(),
+  });
+  db.activities = db.activities.slice(0, 200); // keep last 200
+}
+
+function logSearch(bloodType, city) {
+  db.searches = db.searches || [];
+  db.searches.push({ bloodType: bloodType || 'any', city: city || 'any', at: Date.now() });
+  db.searches = db.searches.slice(-500); // keep last 500
+}
+
+/* ---------------- Email notifications (Resend) ---------------- */
+
 async function sendMatchEmail(to, request) {
   if (!process.env.RESEND_API_KEY) {
     console.log('RESEND_API_KEY not set — skipping email.');
@@ -39,93 +157,6 @@ async function sendMatchEmail(to, request) {
     console.error('Email send failed:', err.message);
   }
 }
-const PORT = process.env.PORT || 3000;
-const DB_PATH = path.join(__dirname, 'data', 'db.json');
-const PUBLIC_DIR = path.join(__dirname, 'public');
-
-/* ---------------- Database (JSON file) ---------------- */
-
-function seedDB() {
-  const now = Date.now();
-  const mkUser = (name, email, bloodType, city, phone, i) => {
-    const { hash, salt } = hashPassword('demo1234');
-    return {
-      id: 'u_' + crypto.randomBytes(6).toString('hex'),
-      name, email, passwordHash: hash, passwordSalt: salt,
-      role: 'donor', bloodType, city, phone,
-      availableGeneral: i % 5 !== 0,
-      availableEmergency: i % 3 === 0,
-      donations: i % 3 === 0 ? [{ id: 'd_' + i, date: '2026-05-12', location: 'Dhaka Medical College Hospital' }] : [],
-      createdAt: now - i * 86400000,
-    };
-  };
-
-  const donorSeed = [
-    ['Rahim Uddin', 'rahim.uddin@example.com', 'O+', 'Dhaka', '01700000001'],
-    ['Fatima Akter', 'fatima.akter@example.com', 'A-', 'Dhaka', '01700000002'],
-    ['Karim Hossain', 'karim.hossain@example.com', 'B+', 'Chattogram', '01700000003'],
-    ['Nasrin Sultana', 'nasrin.sultana@example.com', 'AB+', 'Sylhet', '01700000004'],
-    ['Jahangir Alam', 'jahangir.alam@example.com', 'O-', 'Khulna', '01700000005'],
-    ['Sadia Islam', 'sadia.islam@example.com', 'A+', 'Dhaka', '01700000006'],
-    ['Tanvir Ahmed', 'tanvir.ahmed@example.com', 'B-', 'Rajshahi', '01700000007'],
-    ['Mim Chowdhury', 'mim.chowdhury@example.com', 'O+', 'Dhaka', '01700000008'],
-  ];
-  const donors = donorSeed.map((d, i) => mkUser(d[0], d[1], d[2], d[3], d[4], i));
-
-  const adminPw = hashPassword('admin123');
-  const admin = {
-    id: 'u_admin', name: 'Admin', email: 'admin@lifedrop.org',
-    passwordHash: adminPw.hash, passwordSalt: adminPw.salt,
-    role: 'admin', createdAt: now,
-  };
-
-  const requests = [
-    {
-      id: 'r_' + crypto.randomBytes(5).toString('hex'), patientName: 'Abdul Karim', bloodType: 'O-', city: 'Dhaka',
-      hospital: 'Dhaka Medical College Hospital', unitsNeeded: 2, urgency: 'emergency',
-      contactPhone: '01711000111', notes: 'Emergency surgery — needed within hours.',
-      postedBy: donors[1].id, status: 'open', createdAt: now - 3600000 * 2,
-      offers: [],
-    },
-    {
-      id: 'r_' + crypto.randomBytes(5).toString('hex'), patientName: 'Ruma Begum', bloodType: 'B+', city: 'Chattogram',
-      hospital: 'Chattogram General Hospital', unitsNeeded: 1, urgency: 'soon',
-      contactPhone: '01822000222', notes: 'Scheduled procedure in 3 days.',
-      postedBy: donors[2].id, status: 'open', createdAt: now - 3600000 * 30,
-      offers: [],
-    },
-  ];
-
-  return { users: [...donors, admin], requests, sessions: {} };
-}
-
-function hashPassword(password, existingSalt) {
-  const salt = existingSalt || crypto.randomBytes(16).toString('hex');
-  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
-  return { hash, salt };
-}
-
-function verifyPassword(password, salt, hash) {
-  const check = crypto.scryptSync(password, salt, 64).toString('hex');
-  return crypto.timingSafeEqual(Buffer.from(check), Buffer.from(hash));
-}
-
-function loadDB() {
-  if (!fs.existsSync(DB_PATH)) {
-    const fresh = seedDB();
-    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-    fs.writeFileSync(DB_PATH, JSON.stringify(fresh, null, 2));
-    return fresh;
-  }
-  return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
-}
-
-function saveDB(db) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
-}
-
-let db = loadDB();
-
 
 /* ---------------- Helpers ---------------- */
 
@@ -168,7 +199,9 @@ function getCurrentUser(req) {
   if (!token) return null;
   const userId = db.sessions[token];
   if (!userId) return null;
-  return db.users.find(u => u.id === userId) || null;
+  const user = db.users.find(u => u.id === userId) || null;
+  if (user) user.lastActive = Date.now();
+  return user;
 }
 
 function requireAuth(req, res) {
@@ -198,6 +231,7 @@ function serveStatic(req, res, pathname) {
 
 async function handleApi(req, res, pathname, query) {
   const method = req.method;
+
   // POST /api/register
   if (pathname === '/api/register' && method === 'POST') {
     const body = await readBody(req);
@@ -213,15 +247,17 @@ async function handleApi(req, res, pathname, query) {
       id: 'u_' + crypto.randomBytes(6).toString('hex'), name, email, phone, bloodType, city,
       passwordHash: hash, passwordSalt: salt, role: 'donor',
       availableGeneral: true, availableEmergency: false, donations: [], createdAt: Date.now(),
+      lastLogin: Date.now(), lastActive: Date.now(),
     };
     db.users.push(user);
+    logActivity('register', name + ' registered as a donor.', user.id);
     const token = crypto.randomBytes(24).toString('hex');
     db.sessions[token] = user.id;
     saveDB(db);
     return send(res, 201, { token, user: publicUser(user) });
   }
 
- // POST /api/login
+  // POST /api/login
   if (pathname === '/api/login' && method === 'POST') {
     const body = await readBody(req);
     const user = db.users.find(u => u.email.toLowerCase() === (body.email || '').toLowerCase());
@@ -229,6 +265,8 @@ async function handleApi(req, res, pathname, query) {
       return send(res, 401, { error: 'Incorrect email or password.' });
     }
     user.lastLogin = Date.now();
+    user.lastActive = Date.now();
+    logActivity('login', user.name + ' logged in.', user.id);
     const token = crypto.randomBytes(24).toString('hex');
     db.sessions[token] = user.id;
     saveDB(db);
@@ -245,6 +283,7 @@ async function handleApi(req, res, pathname, query) {
   // GET /api/me
   if (pathname === '/api/me' && method === 'GET') {
     const user = getCurrentUser(req);
+    if (user) saveDB(db);
     return send(res, 200, { user: publicUser(user) });
   }
 
@@ -255,6 +294,10 @@ async function handleApi(req, res, pathname, query) {
     if (query.city && query.city !== 'any') donors = donors.filter(d => d.city === query.city);
     if (query.available === 'true') donors = donors.filter(d => d.availableGeneral);
     if (query.emergency === 'true') donors = donors.filter(d => d.availableEmergency);
+    if ((query.bloodType && query.bloodType !== 'any') || (query.city && query.city !== 'any')) {
+      logSearch(query.bloodType, query.city);
+      saveDB(db);
+    }
     return send(res, 200, { donors: donors.map(publicUser) });
   }
 
@@ -284,6 +327,7 @@ async function handleApi(req, res, pathname, query) {
     const record = { id: 'd_' + crypto.randomBytes(5).toString('hex'), date: body.date, location: body.location };
     target.donations = target.donations || [];
     target.donations.push(record);
+    logActivity('donation', target.name + ' logged a donation at ' + body.location + '.', target.id);
     saveDB(db);
     return send(res, 201, { donations: target.donations });
   }
@@ -304,7 +348,7 @@ async function handleApi(req, res, pathname, query) {
     if (query.status && query.status !== 'any') reqs = reqs.filter(r => r.status === query.status);
     if (query.urgency && query.urgency !== 'any') reqs = reqs.filter(r => r.urgency === query.urgency);
     reqs.sort((a, b) => {
-      const rank = { emergency: 0, urgent: 0, soon: 1, open: 2 };
+      const rank = { emergency: 0, soon: 1, open: 2 };
       if (a.status !== b.status) return a.status === 'open' ? -1 : 1;
       return (rank[a.urgency] - rank[b.urgency]) || (b.createdAt - a.createdAt);
     });
@@ -325,12 +369,16 @@ async function handleApi(req, res, pathname, query) {
       postedBy: user ? user.id : null, status: 'open', createdAt: Date.now(), offers: [],
     };
     db.requests.unshift(request);
+    logActivity('request', (user ? user.name : 'Someone') + ' posted a request for ' + request.bloodType + ' in ' + request.city + '.', user ? user.id : null);
     saveDB(db);
+
+    // Notify matching available donors by email (best-effort, doesn't block the response)
     const matchingDonors = db.users.filter(u =>
       u.role === 'donor' && u.bloodType === request.bloodType &&
       u.city === request.city && u.availableGeneral
     );
     matchingDonors.forEach(d => sendMatchEmail(d.email, request));
+
     return send(res, 201, { request });
   }
 
@@ -343,6 +391,7 @@ async function handleApi(req, res, pathname, query) {
     if (request.status !== 'open') return send(res, 400, { error: 'This request is no longer open.' });
     if (!request.offers.some(o => o.donorId === user.id)) {
       request.offers.push({ donorId: user.id, donorName: user.name, donorPhone: user.phone, at: Date.now() });
+      logActivity('offer', user.name + ' offered to donate for ' + request.patientName + '.', user.id);
     }
     saveDB(db);
     return send(res, 200, { request });
@@ -356,6 +405,7 @@ async function handleApi(req, res, pathname, query) {
     if (!request) return send(res, 404, { error: 'Request not found.' });
     if (request.postedBy !== user.id && user.role !== 'admin') return send(res, 403, { error: 'Not allowed.' });
     request.status = 'fulfilled';
+    logActivity('fulfilled', request.patientName + '\u2019s request was marked fulfilled.', user.id);
     saveDB(db);
     return send(res, 200, { request });
   }
@@ -394,6 +444,36 @@ async function handleApi(req, res, pathname, query) {
       totalDonationsLogged: donors.reduce((s, d) => s + (d.donations || []).length, 0),
       byType,
     });
+  }
+
+  // GET /api/activities — admin recent activity feed
+  if (pathname === '/api/activities' && method === 'GET') {
+    const user = requireAuth(req, res); if (!user) return;
+    if (user.role !== 'admin') return send(res, 403, { error: 'Admin only.' });
+    return send(res, 200, { activities: (db.activities || []).slice(0, 50) });
+  }
+
+  // GET /api/search-stats — admin analytics on donor searches
+  if (pathname === '/api/search-stats' && method === 'GET') {
+    const user = requireAuth(req, res); if (!user) return;
+    if (user.role !== 'admin') return send(res, 403, { error: 'Admin only.' });
+    const searches = db.searches || [];
+    const byBloodType = {};
+    const byCity = {};
+    searches.forEach(s => {
+      if (s.bloodType !== 'any') byBloodType[s.bloodType] = (byBloodType[s.bloodType] || 0) + 1;
+      if (s.city !== 'any') byCity[s.city] = (byCity[s.city] || 0) + 1;
+    });
+    return send(res, 200, { total: searches.length, byBloodType, byCity });
+  }
+
+  // GET /api/online-users — users active in the last 15 minutes
+  if (pathname === '/api/online-users' && method === 'GET') {
+    const user = requireAuth(req, res); if (!user) return;
+    if (user.role !== 'admin') return send(res, 403, { error: 'Admin only.' });
+    const cutoff = Date.now() - 15 * 60 * 1000;
+    const online = db.users.filter(u => u.lastActive && u.lastActive > cutoff);
+    return send(res, 200, { count: online.length, users: online.map(publicUser) });
   }
 
   return send(res, 404, { error: 'Not found.' });

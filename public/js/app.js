@@ -31,7 +31,10 @@ function toast(msg, kind) {
 
 function timeAgo(ts) {
   const h = Math.floor((Date.now() - ts) / 3600000);
-  if (h < 1) return 'just now';
+  if (h < 1) {
+    const min = Math.floor((Date.now() - ts) / 60000);
+    return min < 1 ? 'just now' : min + 'm ago';
+  }
   if (h < 24) return h + 'h ago';
   return Math.floor(h / 24) + 'd ago';
 }
@@ -222,9 +225,8 @@ async function viewEmergency(root) {
   data.donors.forEach(u => list.appendChild(donorCard(u)));
 
   function openPostForm(urgency) {
-    // FIX: set the prefill value BEFORE navigating, since setRoute() triggers
-    // a synchronous render() -> viewPostRequest() call that reads this value
-    // immediately. Setting it after setRoute() meant it was always read too late.
+    // Set the prefill value BEFORE navigating: setRoute() triggers a synchronous
+    // render() -> viewPostRequest() call that reads this value immediately.
     sessionStorage.setItem('lifedrop_prefill_urgency', urgency);
     setRoute('post-request');
   }
@@ -445,7 +447,7 @@ async function viewDashboard(root) {
   root.appendChild(el('h1', {}, ['Welcome, ' + u.name.split(' ')[0]]));
   root.appendChild(el('p', { class: 'soft', style: 'margin-bottom:24px' }, ['Your donor profile, availability, and donation history.']));
 
-  const top = el('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px' });
+  const top = el('div', { class: 'grid-2', style: 'margin-bottom:24px' });
 
   const profileCard = el('div', { class: 'card' }, [
     el('div', { class: 'row', style: 'justify-content:space-between;margin-bottom:14px' }, [
@@ -544,7 +546,16 @@ async function viewAdmin(root) {
   root.appendChild(tabsEl);
   root.appendChild(bodyEl);
 
-  [['overview', 'Overview'], ['donors', 'Donors'], ['requests', 'Requests']].forEach(([id, label]) => {
+  const TABS = [
+    ['overview', 'Overview'],
+    ['donors', 'Donors'],
+    ['requests', 'Requests'],
+    ['activities', 'Activities'],
+    ['search', 'Search Analytics'],
+    ['online', 'Online Users'],
+  ];
+
+  TABS.forEach(([id, label]) => {
     const b = el('button', { class: 'nav-link' + (tab === id ? ' active' : ''), onclick: () => { tab = id; renderTabs(); loadTab(); } }, [label]);
     b.dataset.tabid = id;
     tabsEl.appendChild(b);
@@ -556,6 +567,7 @@ async function viewAdmin(root) {
 
   async function loadTab() {
     bodyEl.innerHTML = '';
+
     if (tab === 'overview') {
       const stats = await api('/api/stats');
       const grid = el('div', { class: 'grid-4', style: 'margin-bottom:24px' }, [
@@ -578,9 +590,10 @@ async function viewAdmin(root) {
       });
       bodyEl.appendChild(chartCard);
     }
-   if (tab === 'donors') {
+
+    if (tab === 'donors') {
       const data = await api('/api/donors');
-      const card = el('div', { class: 'card', style: 'overflow:hidden;padding:0' });
+      const card = el('div', { class: 'card', style: 'overflow:hidden;padding:0;overflow-x:auto' });
       const table = el('table', {}, [el('tr', {}, ['Name', 'Type', 'City', 'Available', 'Donations', 'Last Login', ''].map(h => el('th', {}, [h])))]);
       data.donors.forEach(u => {
         const delBtn = el('button', { class: 'btn secondary sm', onclick: async () => { await api('/api/donors/' + u.id, { method: 'DELETE' }); toast('User removed.'); loadTab(); } }, [icon('trash')]);
@@ -597,7 +610,7 @@ async function viewAdmin(root) {
       card.appendChild(table);
       bodyEl.appendChild(card);
     }
-  
+
     if (tab === 'requests') {
       const [data, donorData] = await Promise.all([api('/api/requests'), api('/api/donors')]);
       const donorById = {};
@@ -614,6 +627,73 @@ async function viewAdmin(root) {
             el('div', { class: 'muted', style: 'font-size:12.5px' }, [r.hospital + ' \u00b7 ' + r.city + ' \u00b7 ' + timeAgo(r.createdAt) + ' \u00b7 Posted by: ' + (poster ? poster.name + ' (' + poster.email + ')' : 'Anonymous/Guest')]),
           ]),
           actions,
+        ]));
+      });
+      bodyEl.appendChild(list);
+    }
+
+    if (tab === 'activities') {
+      const data = await api('/api/activities');
+      const list = el('div', { class: 'stack' });
+      if (data.activities.length === 0) {
+        list.appendChild(el('div', { class: 'card muted', style: 'text-align:center' }, ['No activity yet.']));
+      }
+      data.activities.forEach(a => {
+        list.appendChild(el('div', { class: 'card row', style: 'justify-content:space-between' }, [
+          el('span', {}, [a.message]),
+          el('span', { class: 'muted', style: 'font-size:12.5px' }, [timeAgo(a.at)]),
+        ]));
+      });
+      bodyEl.appendChild(list);
+    }
+
+    if (tab === 'search') {
+      const data = await api('/api/search-stats');
+      bodyEl.appendChild(el('p', { class: 'muted', style: 'margin-bottom:16px' }, [data.total + ' total searches recorded']));
+
+      bodyEl.appendChild(el('h2', { style: 'font-size:18px;margin-bottom:12px' }, ['Most searched blood types']));
+      const btCard = el('div', { class: 'card', style: 'margin-bottom:24px' });
+      const btEntries = Object.entries(data.byBloodType).sort((a, b) => b[1] - a[1]);
+      const btMax = Math.max(1, ...btEntries.map(e => e[1]));
+      if (btEntries.length === 0) btCard.appendChild(el('p', { class: 'muted' }, ['No searches yet.']));
+      btEntries.forEach(([bt, count]) => {
+        btCard.appendChild(el('div', { class: 'bar-row' }, [
+          el('span', { class: 'badge blood', style: 'width:50px' }, [bt]),
+          el('div', { class: 'bar-track' }, [el('div', { class: 'bar-fill', style: 'width:' + (count / btMax * 100) + '%' })]),
+          el('span', { style: 'font-size:13px;width:20px;text-align:right' }, [String(count)]),
+        ]));
+      });
+      bodyEl.appendChild(btCard);
+
+      bodyEl.appendChild(el('h2', { style: 'font-size:18px;margin-bottom:12px' }, ['Most searched cities']));
+      const cityCard = el('div', { class: 'card' });
+      const cityEntries = Object.entries(data.byCity).sort((a, b) => b[1] - a[1]);
+      const cityMax = Math.max(1, ...cityEntries.map(e => e[1]));
+      if (cityEntries.length === 0) cityCard.appendChild(el('p', { class: 'muted' }, ['No searches yet.']));
+      cityEntries.forEach(([city, count]) => {
+        cityCard.appendChild(el('div', { class: 'bar-row' }, [
+          el('span', { class: 'badge mute', style: 'width:80px' }, [city]),
+          el('div', { class: 'bar-track' }, [el('div', { class: 'bar-fill', style: 'width:' + (count / cityMax * 100) + '%' })]),
+          el('span', { style: 'font-size:13px;width:20px;text-align:right' }, [String(count)]),
+        ]));
+      });
+      bodyEl.appendChild(cityCard);
+    }
+
+    if (tab === 'online') {
+      const data = await api('/api/online-users');
+      bodyEl.appendChild(el('p', { class: 'muted', style: 'margin-bottom:16px' }, [data.count + ' user' + (data.count !== 1 ? 's' : '') + ' active in the last 15 minutes']));
+      const list = el('div', { class: 'stack' });
+      if (data.users.length === 0) {
+        list.appendChild(el('div', { class: 'card muted', style: 'text-align:center' }, ['No one active right now.']));
+      }
+      data.users.forEach(u => {
+        list.appendChild(el('div', { class: 'card row', style: 'justify-content:space-between' }, [
+          el('div', {}, [
+            el('div', { style: 'font-weight:700;font-size:14px' }, [u.name]),
+            el('div', { class: 'muted', style: 'font-size:12.5px' }, [u.email]),
+          ]),
+          el('span', { class: 'badge ok' }, ['Active ' + timeAgo(u.lastActive)]),
         ]));
       });
       bodyEl.appendChild(list);
