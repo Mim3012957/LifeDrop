@@ -158,12 +158,12 @@
       "id": "u_admin",
       "name": "Admin",
       "email": "admin@lifedrop.org",
-      "passwordHash": "19374f2f977388da1bf6569ca842083e90ed896834700551e33187ef520d7c5b48011e84643cbfacbf295e3356c274cb2a6cdb09e2084f1a2daee7eef00bb294",
-      "passwordSalt": "55332e67d460e2eef46761a65e45e8d0",
+      "passwordHash": "2d1cc49a96809db0fbc14977f362f669950da97dd234722ed39b1693e026310ad4cddba8d7ad0bb53ce12994f5b09230d5df371bd3afe9b2897b1e9428e4ea30",
+      "passwordSalt": "ea384f30484327716ea05365ceaacd1c",
       "role": "admin",
       "createdAt": 1784629697018,
-      "lastLogin": 1784802842525,
-      "lastActive": 1784802842525
+      "lastLogin": 1784804423780,
+      "lastActive": 1784804965489
     },
     {
       "id": "u_068ca0e95993",
@@ -238,9 +238,23 @@
     }
   ],
   "sessions": {
-    "cc2b85fe7fa6ca7e498a975b62327273dc5744bbeee9e76b": "u_admin"
+    "e08719d7c306c4dbbb9bbaa9ca98f591c018f222327e391a": "u_admin"
   },
   "activities": [
+    {
+      "id": "a_90326b59d3",
+      "type": "password_change",
+      "message": "Admin changed their password.",
+      "userId": "u_admin",
+      "at": 1784804965811
+    },
+    {
+      "id": "a_e0e43f351d",
+      "type": "login",
+      "message": "Admin logged in.",
+      "userId": "u_admin",
+      "at": 1784804423798
+    },
     {
       "id": "a_5916c7a78c",
       "type": "login",

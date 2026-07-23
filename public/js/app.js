@@ -366,7 +366,6 @@ async function viewPostRequest(root) {
 async function viewLogin(root) {
   root.appendChild(el('div', { style: 'max-width:400px;margin:20px auto' }, [
     el('h1', {}, ['Log in']),
-    el('p', { class: 'soft', style: 'margin-bottom:20px' }, ['Demo donor: rahim.uddin@example.com / demo1234 \u00b7 Demo admin: admin@lifedrop.org / admin123']),
   ]));
   const form = el('form', { class: 'card', style: 'max-width:400px;margin:0 auto' });
   const emailInput = el('input', { type: 'email', placeholder: 'you@example.com' });
@@ -543,6 +542,23 @@ async function viewAdmin(root) {
   const bodyEl = el('div', {});
   root.appendChild(el('h1', {}, ['Admin dashboard']));
   root.appendChild(el('p', { class: 'soft', style: 'margin-bottom:20px' }, ['Manage donors and requests across the network.']));
+  const pwCard = el('div', { class: 'card', style: 'margin-bottom:24px;max-width:400px' });
+  pwCard.appendChild(el('div', { style: 'font-weight:700;margin-bottom:12px' }, ['Change admin password']));
+  const curPwInput = el('input', { type: 'password', placeholder: 'Current password' });
+  const newPwInput = el('input', { type: 'password', placeholder: 'New password' });
+  pwCard.appendChild(el('div', { class: 'field' }, [el('label', {}, ['Current password']), curPwInput]));
+  pwCard.appendChild(el('div', { class: 'field' }, [el('label', {}, ['New password']), newPwInput]));
+  const pwBtn = el('button', { class: 'btn secondary sm' }, ['Update password']);
+  pwBtn.addEventListener('click', async () => {
+    if (!curPwInput.value || !newPwInput.value) { toast('Fill in both fields.', 'err'); return; }
+    try {
+      await api('/api/change-password', { method: 'POST', body: JSON.stringify({ currentPassword: curPwInput.value, newPassword: newPwInput.value }) });
+      toast('Password updated.');
+      curPwInput.value = ''; newPwInput.value = '';
+    } catch (err) { toast(err.message, 'err'); }
+  });
+  pwCard.appendChild(pwBtn);
+  root.appendChild(pwCard);
   root.appendChild(tabsEl);
   root.appendChild(bodyEl);
 

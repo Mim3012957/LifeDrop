@@ -280,6 +280,27 @@ async function handleApi(req, res, pathname, query) {
     return send(res, 200, { ok: true });
   }
 
+  // POST /api/change-password  { currentPassword, newPassword }
+  if (pathname === '/api/change-password' && method === 'POST') {
+    const user = requireAuth(req, res); if (!user) return;
+    const body = await readBody(req);
+    if (!body.currentPassword || !body.newPassword) {
+      return send(res, 400, { error: 'Current and new password are required.' });
+    }
+    if (!verifyPassword(body.currentPassword, user.passwordSalt, user.passwordHash)) {
+      return send(res, 401, { error: 'Current password is incorrect.' });
+    }
+    if (body.newPassword.length < 6) {
+      return send(res, 400, { error: 'New password must be at least 6 characters.' });
+    }
+    const { hash, salt } = hashPassword(body.newPassword);
+    user.passwordHash = hash;
+    user.passwordSalt = salt;
+    logActivity('password_change', user.name + ' changed their password.', user.id);
+    saveDB(db);
+    return send(res, 200, { ok: true });
+  }
+
   // GET /api/me
   if (pathname === '/api/me' && method === 'GET') {
     const user = getCurrentUser(req);
@@ -509,6 +530,4 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log('LifeDrop server running at http://localhost:' + PORT);
-  console.log('Demo donor login: rahim.uddin@example.com / demo1234');
-  console.log('Demo admin login:  admin@lifedrop.org / admin123');
 });
