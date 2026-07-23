@@ -145,7 +145,8 @@
       "passwordHash": "19374f2f977388da1bf6569ca842083e90ed896834700551e33187ef520d7c5b48011e84643cbfacbf295e3356c274cb2a6cdb09e2084f1a2daee7eef00bb294",
       "passwordSalt": "55332e67d460e2eef46761a65e45e8d0",
       "role": "admin",
-      "createdAt": 1784629697018
+      "createdAt": 1784629697018,
+      "lastLogin": 1784801246341
     },
     {
       "id": "u_068ca0e95993",
@@ -218,6 +219,6 @@
     }
   ],
   "sessions": {
-    "d7576f65a2897676305352fdbc26ab023e325015b6cb9305": "u_068ca0e95993"
+    "0d400cfbaa830df06d99494b5c661baa096e4d9b4959f419": "u_admin"
   }
 }

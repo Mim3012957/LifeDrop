@@ -578,10 +578,10 @@ async function viewAdmin(root) {
       });
       bodyEl.appendChild(chartCard);
     }
-    if (tab === 'donors') {
+   if (tab === 'donors') {
       const data = await api('/api/donors');
       const card = el('div', { class: 'card', style: 'overflow:hidden;padding:0' });
-      const table = el('table', {}, [el('tr', {}, ['Name', 'Type', 'City', 'Available', 'Donations', ''].map(h => el('th', {}, [h])))]);
+      const table = el('table', {}, [el('tr', {}, ['Name', 'Type', 'City', 'Available', 'Donations', 'Last Login', ''].map(h => el('th', {}, [h])))]);
       data.donors.forEach(u => {
         const delBtn = el('button', { class: 'btn secondary sm', onclick: async () => { await api('/api/donors/' + u.id, { method: 'DELETE' }); toast('User removed.'); loadTab(); } }, [icon('trash')]);
         table.appendChild(el('tr', {}, [
@@ -590,6 +590,7 @@ async function viewAdmin(root) {
           el('td', {}, [u.city]),
           el('td', {}, [el('span', { class: 'badge ' + (u.availableGeneral ? 'ok' : 'mute') }, [u.availableGeneral ? 'Yes' : 'No'])]),
           el('td', {}, [String((u.donations || []).length)]),
+          el('td', {}, [u.lastLogin ? timeAgo(u.lastLogin) : 'Never']),
           el('td', {}, [delBtn]),
         ]));
       });

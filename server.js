@@ -221,13 +221,14 @@ async function handleApi(req, res, pathname, query) {
     return send(res, 201, { token, user: publicUser(user) });
   }
 
-  // POST /api/login
+ // POST /api/login
   if (pathname === '/api/login' && method === 'POST') {
     const body = await readBody(req);
     const user = db.users.find(u => u.email.toLowerCase() === (body.email || '').toLowerCase());
     if (!user || !verifyPassword(body.password || '', user.passwordSalt, user.passwordHash)) {
       return send(res, 401, { error: 'Incorrect email or password.' });
     }
+    user.lastLogin = Date.now();
     const token = crypto.randomBytes(24).toString('hex');
     db.sessions[token] = user.id;
     saveDB(db);
